@@ -1,16 +1,64 @@
-import React, { useState } from "react"
-import { useRef } from "react"
+import React, { useState, useRef } from "react"
+import { useMutation, gql } from "@apollo/client"
 
 import Header from "../components/Header"
 import Lolly from "../components/Lolly"
+import { navigate } from "gatsby-link"
+
+const createLollyMutation = gql`
+  mutation createLolly(
+    $recipientName: String!,
+    $message: String!,
+    $senderName: String!,
+    $flavourTop: String!,
+    $flavourMiddle: String!,
+    $flavourBottom: String!,
+  ) {
+    createLolly(
+      recipientName: $recipientName,
+      message: $message,
+      senderName: $senderName,
+      flavourTop: $flavourTop,
+      flavourMiddle: $flavourMiddle,
+      flavourBottom: $flavourBottom,
+    ) {
+      recipientName
+      message
+      senderName
+      flavourTop
+      flavourMiddle
+      flavourBottom
+      lollyPath
+    }
+  }
+`
 
 const NewLolly = () => {
   const [color1, setColor1] = useState("#d52358")
   const [color2, setColor2] = useState("#e95946")
   const [color3, setColor3] = useState("#deaa43")
+
   const recipientNameRef = useRef()
   const messageRef = useRef()
   const senderNameRef = useRef()
+
+  const [createLolly] = useMutation(createLollyMutation)
+
+  const createLollySubmit = async () => {
+    const result = await createLolly({
+      variables: {
+        recipientName: recipientNameRef.current.value,
+        message: messageRef.current.value,
+        senderName: senderNameRef.current.value,
+        flavourTop: color1,
+        flavourMiddle: color2,
+        flavourBottom: color3,
+      }
+    })
+
+    console.log(`Result: ${result.data.createLolly}`);
+    navigate(`/showLolly?id=${result.data.createLolly.lollyPath}`);
+  }
 
   return (
     <div className="container" style={{ marginBottom: "100px" }}>
@@ -102,10 +150,9 @@ const NewLolly = () => {
               <input name="senderName" id="senderName" ref={senderNameRef} />
             </div>
           </div>
-          {/* <button onClick={createLollySubmit}>
+          <button onClick={createLollySubmit}>
             Freeze this lolly & get the Link
-          </button> */}
-          <button>Freeze this lolly & get the Link</button>
+          </button>
         </div>
       </div>
     </div>
